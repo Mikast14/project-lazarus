@@ -1,0 +1,16 @@
+# dependencies and build output
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.db
+.DS_Store
+.claude/
+
+# The background music is a commercial recording. It stays on the owner's machine and is not
+# published. The app falls back to its built-in organ when this file is absent.
+frontend/public/music.mp3
+
+# The backend holds the challenge flags and the intended solutions in plain text. It is kept out
+# of the public repository so the challenge is not spoiled. Remove this line to include it.
+backend/
