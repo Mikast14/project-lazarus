@@ -102,9 +102,9 @@ function init() {
 
   // Optional: the player's own background music. If frontend/public/music.mp3 exists it loops quietly
   // and replaces the organ; the sound effects still play over it. The project ships no music file.
-  fetch('/music.mp3', { method: 'HEAD' }).then(res => {
+  fetch('music.mp3', { method: 'HEAD' }).then(res => {
     if (!res.ok || !res.headers.get('content-type')?.startsWith('audio')) return   // dev server answers missing files with the page itself
-    music = new Audio('/music.mp3'); music.loop = true; music.volume = musicWanted ? MUSIC_VOLUME : 0
+    music = new Audio('music.mp3'); music.loop = true; music.volume = musicWanted ? MUSIC_VOLUME : 0
     organ.gain.setTargetAtTime(0, ctx!.currentTime, 1)
     if (on && musicWanted) void music.play().catch(() => {})
   }).catch(() => {})
