@@ -60,3 +60,20 @@ body {
   .station::before { display: none; }
   .hero-title, .reveal > * { animation: none; }
 }
+
+/* Landing-site scenes (Surface.tsx) and the typing cursor. */
+.site-blink { animation: site-blink 1.6s infinite; }
+@keyframes site-blink { 50% { opacity: .12 } }
+.site-glow { animation: site-blink 5s ease-in-out infinite; }
+.site * { transform-box: fill-box; }
+.site-wave { transform-origin: 50% 100%; animation: site-wave 16s ease-in infinite; }       /* the wave grows as it closes in */
+@keyframes site-wave { from { transform: scaleY(.55) } 85% { transform: scaleY(3.1) } to { transform: scaleY(3.1) } }
+.site-ripple { animation: site-ripple 6s linear infinite; }
+@keyframes site-ripple { to { stroke-dashoffset: -220 } }
+.site-drift { animation: site-drift 30s ease-in-out infinite alternate; }
+@keyframes site-drift { from { transform: translateX(-34px) } to { transform: translateX(34px) } }
+.site-snow { animation: site-snow 6s linear infinite; }
+@keyframes site-snow { from { transform: translate(0, -10px) } to { transform: translate(-170px, 350px) } }
+@media (prefers-reduced-motion: reduce) {
+  .site-blink, .site-glow, .site-wave, .site-ripple, .site-drift, .site-snow { animation: none; }
+}

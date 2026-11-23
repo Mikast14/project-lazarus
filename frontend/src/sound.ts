@@ -194,6 +194,7 @@ export const sfx = {
     boom(0.3); brass([55, 82.41, 110, 164.81], 3.2, [900, 1400, 110], 0.16, 0.05)
     tone(523.25, 1.6, { volume: 0.05, delay: 0.15, wet: 1 }); tone(783.99, 2.2, { volume: 0.04, delay: 0.35, wet: 1 })
   },
+  type: () => tone(1700, 0.02, { type: 'square', volume: 0.007, wet: 0.2 }),   // one keystroke of a typed log line
   // flight simulator
   shot: () => tone(980, 0.05, { type: 'square', volume: 0.01, wet: 0.1 }),
   hit: () => tone(180, 0.14, { type: 'sawtooth', volume: 0.04, wet: 0.3 }),

@@ -1,5 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { PLANETS, PROGRESS, type LogEntry, type PlanetId, type Row } from './data'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { PLANETS, PROGRESS, VOICES, type LogEntry, type PlanetId, type Row } from './data'
+import { sfx } from './sound'
+import { Surface } from './Surface'
 
 const CORNERS = ['-top-px -left-px border-t border-l', '-top-px -right-px border-t border-r',
   '-bottom-px -left-px border-b border-l', '-bottom-px -right-px border-b border-r']
@@ -59,10 +61,36 @@ export function Table({ rows, mark }: { rows: Row[]; mark?: (row: Row, key: stri
   )
 }
 
+/** A recorded message that types itself out, one character at a time, shortly after the screen opens. */
+function Voice({ lines }: { lines: string[] }) {
+  const text = lines.join('\n')
+  const [shown, setShown] = useState(() => (matchMedia('(prefers-reduced-motion: reduce)').matches ? text.length : 0))
+  useEffect(() => {
+    if (shown >= text.length) return
+    // wait for the title to settle before the first character; pause a little at the end of each line
+    const wait = shown === 0 ? 1700 : text[shown - 1] === '\n' ? 520 : 30
+    const id = setTimeout(() => { if (shown % 3 === 0) sfx.type(); setShown(shown + 1) }, wait)
+    return () => clearTimeout(id)
+  }, [shown, text])
+  const [speaker, ...rest] = text.slice(0, shown).split('\n')
+  return (
+    <div className="mt-4 min-h-16 max-w-md border-l border-(--accent)/50 pl-3 text-xs leading-relaxed [text-shadow:0_0_12px_#000]">
+      <p className="sr-only">{text}</p>{/* screen readers get the whole message at once, not letter by letter */}
+      <div aria-hidden>
+        <p className="text-[10px] tracking-[.3em] text-(--accent)">{speaker}</p>
+        {rest.map((line, i) => <p key={i} className="text-white/80">{line}</p>)}
+        {shown < text.length && <span className="site-blink inline-block h-3 w-1.5 bg-(--accent) align-middle" />}
+      </div>
+    </div>
+  )
+}
+
 export function Station({ id, readouts, children }: { id: PlanetId; readouts: [label: string, value: string][]; children: ReactNode }) {
   const index = PLANETS.findIndex(x => x.id === id)
   const p = PLANETS[index]
   const transmission = PROGRESS.transmissions.find(t => t.planet === id)
+  const [site, setSite] = useState(false)   // false = station data, true = the landing-site camera
+  const tab = (on: boolean) => `cursor-pointer border px-3 py-2 text-[10px] tracking-[.3em] backdrop-blur-sm ${on ? 'border-(--accent) bg-(--accent)/15 text-(--accent)' : 'border-white/20 bg-black/40 hover:border-(--accent) hover:text-(--accent)'}`
   return (
     <main style={{ '--accent': p.color } as CSSProperties} className={`station absolute inset-0 overflow-y-auto ${id === 'mann' ? 'damaged' : ''}`}>
       {/* darkened edges, so the planet reads as a backdrop */}
@@ -75,10 +103,14 @@ export function Station({ id, readouts, children }: { id: PlanetId; readouts: [l
             <p>ENDURANCE NAV-COM // REMOTE LINK</p>
             <p className="mt-1 text-emerald-300/90"><span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-emerald-300 motion-safe:animate-pulse" />LINK ESTABLISHED</p>
           </div>
-          <button onClick={() => { location.hash = '' }}
-            className="cursor-pointer border border-white/20 bg-black/40 px-4 py-2 text-[10px] tracking-[.3em] backdrop-blur-sm hover:border-(--accent) hover:text-(--accent)">
-            ← RETURN TO GARGANTUA
-          </button>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button onClick={() => setSite(false)} aria-pressed={!site} className={tab(!site)}>STATION DATA</button>
+            <button onClick={() => setSite(true)} aria-pressed={site} className={tab(site)}>LANDING SITE</button>
+            <button onClick={() => { location.hash = '' }}
+              className="cursor-pointer border border-white/20 bg-black/40 px-4 py-2 text-[10px] tracking-[.3em] backdrop-blur-sm hover:border-(--accent) hover:text-(--accent)">
+              ← RETURN TO GARGANTUA
+            </button>
+          </div>
         </div>
         <div className="hero-title">
           <p className="text-[10px] tracking-[.5em] text-white/50">STATION 0{index + 1} / 0{PLANETS.length}</p>
@@ -86,25 +118,30 @@ export function Station({ id, readouts, children }: { id: PlanetId; readouts: [l
           <p className="mt-3 flex items-center gap-3 text-xs tracking-[.35em] text-white/70 uppercase">
             <span className="h-px w-10 bg-(--accent)" />{p.station}
           </p>
+          <Voice lines={VOICES[id]} />
         </div>
       </header>
 
       <div className="relative bg-linear-to-b from-transparent via-black/55 to-black/80 px-4 pb-8 md:px-8">
-        <dl className="reveal mb-4 grid grid-cols-2 gap-px border border-white/10 bg-white/10 sm:grid-cols-3 xl:grid-cols-6">
-          {readouts.map(([label, value]) => (
-            <div key={label} className="bg-black/75 px-3 py-2">
-              <dt className="text-[9px] tracking-[.25em] text-white/40">{label}</dt>
-              <dd className="mt-0.5 text-sm tracking-wider text-(--accent)">{value}</dd>
-            </div>
-          ))}
-        </dl>
+        {site ? <Surface id={id} /> : (
+          <>
+          <dl className="reveal mb-4 grid grid-cols-2 gap-px border border-white/10 bg-white/10 sm:grid-cols-3 xl:grid-cols-6">
+            {readouts.map(([label, value]) => (
+              <div key={label} className="bg-black/75 px-3 py-2">
+                <dt className="text-[9px] tracking-[.25em] text-white/40">{label}</dt>
+                <dd className="mt-0.5 text-sm tracking-wider text-(--accent)">{value}</dd>
+              </div>
+            ))}
+          </dl>
 
-        <div className="reveal grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {children}
-          <Panel title="ARCHIVED TRANSMISSION" tag={transmission ? 'RECOVERED' : 'MISSING'}>
-            {transmission?.text ?? <span className="text-white/40">No verified transmission recovered from this station.</span>}
-          </Panel>
-        </div>
+          <div className="reveal grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {children}
+            <Panel title="ARCHIVED TRANSMISSION" tag={transmission ? 'RECOVERED' : 'MISSING'}>
+              {transmission?.text ?? <span className="text-white/40">No verified transmission recovered from this station.</span>}
+            </Panel>
+          </div>
+          </>
+        )}
         <p className="mt-6 flex flex-wrap justify-between gap-2 text-[9px] tracking-[.3em] text-white/30">
           <span>REMOTE LINK · READ ONLY</span><span>CLEARANCE: {PROGRESS.role.toUpperCase()}</span><span>LAZARUS MISSION ARCHIVE</span>
         </p>

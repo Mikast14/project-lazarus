@@ -14,7 +14,9 @@ backend with the challenge logic is developed separately and is not published he
 - A ray-traced black hole with a lensed accretion disk, drawn in a WebGL shader
 - Three procedurally shaded planets with clouds, atmosphere and station beacons
 - The Endurance, with a Ranger or Lander that flies out to each planet and back
-- A station screen for each planet, and a mission-complete ending (add `?complete` to the URL)
+- An opening briefing, shown once per browser session
+- A station screen for each planet with a typed last message and a landing-site camera view
+- A mission-complete ending (add `?complete` to the URL)
 - A small shooter minigame: click the Endurance, or use "Flight simulator" on the home screen
 - Synthesised sound (off by default; button at the bottom of the screen)
 
@@ -29,6 +31,10 @@ npm run dev
 ```
 
 Then open http://localhost:5173.
+
+## Publishing
+
+Every push to `main` rebuilds the site and republishes it to the live link (see `.github/workflows/publish.yml`). It takes about a minute.
 
 ## Built with
 

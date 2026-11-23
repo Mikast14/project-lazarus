@@ -489,12 +489,16 @@ const Lights = () => (
   </group>
 )
 
-function Endurance({ finale, onPlay }: { finale: boolean; onPlay: () => void }) {
+// where the Endurance is first seen in the intro: just ahead of the far camera
+const ARRIVAL = new THREE.Vector3(1.6, 5.4, 33)
+
+function Endurance({ finale, intro, onPlay }: { finale: boolean; intro: boolean; onPlay: () => void }) {
   const ship = useRef<THREE.Group>(null!)
   const ring = useRef<THREE.Group>(null!)
   const bay = useRef<THREE.Group>(null!)   // the Ranger that flies out
   const pad = useRef<THREE.Group>(null!)   // the Lander that flies out
   const leave = useRef(0)   // 0 = holding orbit, 1 = arrived at Edmunds
+  const arrive = useRef(intro ? 0 : 1)   // 0 = at the arrival point, 1 = on its loop
   const edmunds = useMemo(() => new THREE.Vector3().fromArray(PLANETS[2].pos), [])
   useFrame(({ clock }, dt) => {
     // a slow loop above Gargantua: across the top one way nearer the camera, back the other way
@@ -502,6 +506,9 @@ function Endurance({ finale, onPlay }: { finale: boolean; onPlay: () => void }) 
     // line of sight to every planet, and never passes behind the black hole.
     const lap = still ? 0.6 : clock.elapsedTime * 0.1
     ship.current.position.set(Math.sin(lap) * 4.5, 4.6 + Math.sin(lap * 2) * 0.35, 5 + Math.cos(lap) * 1.5)
+    // intro: the ship waits near the camera, then flies in to join its loop over about six seconds
+    arrive.current = intro ? 0 : still ? 1 : Math.min(1, arrive.current + dt / 6)
+    if (arrive.current < 1) ship.current.position.lerp(ARRIVAL, 1 - arrive.current * arrive.current * (3 - 2 * arrive.current))
     // finale: the ship sets off for Edmunds and shrinks into the distance
     leave.current = !finale ? 0 : still ? 0.5 : Math.min(1, leave.current + dt / 50)
     const k = leave.current * leave.current * (3 - 2 * leave.current)
@@ -634,12 +641,12 @@ function Debris() {
 
 // Camera flight: an eased arc between Gargantua and a planet. The lens widens mid-flight for a
 // sense of speed, then tightens to a long lens on arrival, with a slight bank into the turn.
-function Rig({ focus, finale }: { focus: PlanetId | null; finale: boolean }) {
+function Rig({ focus, finale, intro }: { focus: PlanetId | null; finale: boolean; intro: boolean }) {
   const s = useRef({ t: 1, focus: null as string | null, fromFov: 50, from: HOME.clone(), fromLook: new THREE.Vector3(), look: new THREE.Vector3(), drift: new THREE.Vector3() })
   const [to, toLook, ctrl, tmp] = useMemo(() => [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], [])
   useFrame(({ camera, pointer, clock, size }, dt) => {
     const a = s.current, cam = camera as THREE.PerspectiveCamera
-    const shot = focus ?? (finale ? 'finale' : null)
+    const shot = focus ?? (finale ? 'finale' : intro ? 'intro' : null)
     if (a.focus !== shot) { a.focus = shot; a.t = 0; a.from.copy(cam.position).sub(a.drift); a.fromLook.copy(a.look); a.fromFov = cam.fov }
     const p = PLANETS.find(x => x.id === focus)
     if (p) {
@@ -651,6 +658,7 @@ function Rig({ focus, finale }: { focus: PlanetId | null; finale: boolean }) {
       toLook.y -= p.r * 1.5
       toLook.addScaledVector(tmp, -p.r * 2.4 * Math.min(1, size.width / size.height / 1.6))
     }
+    else if (intro) { toLook.set(0, 0, 0); to.set(0, 7, 40) }   // opening shot: far out, the whole system small ahead
     else if (finale) {   // closing shot: pulled back, swaying slowly from side to side
       const sway = still ? 0.25 : Math.sin(clock.elapsedTime * 0.06) * 0.4
       toLook.set(0, -2.6, 0); to.set(Math.sin(sway) * 24, 3.4, Math.cos(sway) * 24)
@@ -666,7 +674,7 @@ function Rig({ focus, finale }: { focus: PlanetId | null; finale: boolean }) {
     a.look.copy(a.fromLook).lerp(toLook, e)
     // mouse drift, only while parked at Gargantua
     // parked at Gargantua the camera is never quite still, and the mouse swings it far enough to change the disk's tilt
-    const parked = !p && !finale && !still, now = clock.elapsedTime
+    const parked = !p && !finale && !intro && !still, now = clock.elapsedTime
     tmp.set(parked ? pointer.x * 3.2 + Math.sin(now * 0.11) * 2 : 0, parked ? pointer.y * 2.2 + Math.sin(now * 0.08) * 1.1 : 0, 0)
     cam.position.add(a.drift.lerp(tmp, 1 - Math.exp(-dt * 2.5)))
     cam.fov = a.fromFov + ((p ? 34 : finale ? 40 : 50) - a.fromFov) * e + swell * (finale ? 0 : 16)
@@ -709,17 +717,17 @@ function AdaptiveDpr() {
   return null
 }
 
-export function Scene({ focus, finale, paused, onPlay, labels, ...nav }: { focus: PlanetId | null; finale: boolean; paused: boolean; onPlay: () => void; labels: Labels } & Nav) {
+export function Scene({ focus, finale, intro, paused, onPlay, labels, ...nav }: { focus: PlanetId | null; finale: boolean; intro: boolean; paused: boolean; onPlay: () => void; labels: Labels } & Nav) {
   return (
     <Canvas frameloop={paused ? 'never' : 'always'} dpr={sharpest()} camera={{ position: HOME.toArray(), fov: 50 }} gl={{ antialias: false }}
       fallback={<div className="gargantua-fallback" />}>
       <Gargantua />
       {PLANETS.map((p, i) => <Planet key={p.id} p={p} kind={i} labels={labels} {...nav} />)}
       <Lights />
-      <Endurance finale={finale} onPlay={onPlay} />
+      <Endurance finale={finale} intro={intro} onPlay={onPlay} />
       <Shuttle focus={focus} />
       <Debris />
-      <Rig focus={focus} finale={finale} />
+      <Rig focus={focus} finale={finale} intro={intro} />
       <AdaptiveDpr />
     </Canvas>
   )

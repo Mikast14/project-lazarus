@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { FLIGHT_S, PLANETS, PROGRESS, type PlanetId } from './data'
+import { Intro } from './Intro'
 import { Minigame } from './Minigame'
 import { Scene } from './Scene'
 import { fadeMusic, setMood, setSound, sfx } from './sound'
@@ -10,6 +11,12 @@ import { Miller } from './stations/Miller'
 
 const STATIONS = { miller: Miller, mann: Mann, edmunds: Edmunds }
 const craftFor = (id: PlanetId) => (id === 'edmunds' ? 'LANDER 1' : 'RANGER 1') // matches the craft Scene flies
+// The intro plays once per browser session, only when arriving at the navigation screen, and not for reduced motion.
+const INTRO_KEY = 'lazarus-intro-seen'
+const wantsIntro = () => {
+  if (location.hash.length > 1 || PROGRESS.complete || matchMedia('(prefers-reduced-motion: reduce)').matches) return false
+  try { return !sessionStorage.getItem(INTRO_KEY) } catch { return true }   // storage blocked: just play it
+}
 const fromHash = () => PLANETS.find(p => p.id === location.hash.slice(1))?.id ?? null
 // one line of the ending, fading up after `delay` seconds
 const reveal = (delay: number) => ({ initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 1.4, delay } })
@@ -50,6 +57,13 @@ export default function App() {
   const current = useRef(view)
   const [craft, setCraft] = useState('RANGER 1') // which craft the flight caption names
   const [playing, setPlaying] = useState(false) // the Ranger flight simulator is open
+  const [intro, setIntro] = useState(wantsIntro) // the opening briefing is playing
+  const [settling, setSettling] = useState(false) // camera is flying in after the intro
+  const endIntro = useCallback(() => {
+    try { sessionStorage.setItem(INTRO_KEY, '1') } catch { /* storage blocked: it will simply play again next time */ }
+    setIntro(false); setSettling(true)
+    setTimeout(() => setSettling(false), FLIGHT_S * 1000 - 300)
+  }, [])
   const [dismissed, setDismissed] = useState(false) // player closed the ending and kept exploring
   const labels = useRef<Record<string, HTMLElement | null>>({})
 
@@ -86,7 +100,7 @@ export default function App() {
     setNotice('NAV-COM OFFLINE. Verification link not connected.') // design phase: no backend yet
   }
 
-  const home = !view && !pending && !returning
+  const home = !view && !pending && !returning && !intro && !settling
   const ending = home && PROGRESS.complete && !dismissed
   const Station = view && STATIONS[view]
   const target = PLANETS.find(p => p.id === hovered)
@@ -101,7 +115,7 @@ export default function App() {
   return (
     <div className="relative h-full" style={{ cursor: hovered && home ? 'pointer' : undefined }}>
       <div className="absolute inset-0">
-        <Scene focus={view ?? pending} finale={ending} paused={playing} onPlay={play} labels={labels} hovered={hovered} onHover={hover} onSelect={select} />
+        <Scene focus={view ?? pending} finale={ending} intro={intro} paused={playing} onPlay={play} labels={labels} hovered={hovered} onHover={hover} onSelect={select} />
       </div>
 
       {/* Planet labels are real buttons, so navigation works by keyboard and without WebGL. */}
@@ -145,6 +159,7 @@ export default function App() {
       {playing && <Minigame onExit={() => setPlaying(false)} />}
 
       <AnimatePresence>
+        {intro && <Intro key="intro" onDone={endIntro} />}
         {home && !ending && (
           <motion.div key="hud" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 1.2, delay: 0.5 } }}
             exit={{ opacity: 0, transition: { duration: 0.4 } }} className="ui pointer-events-none absolute inset-0 flex flex-col justify-between p-6 md:p-9">

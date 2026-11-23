@@ -22,6 +22,13 @@ export const PLANETS = [
 
 export type Row = Record<string, string | number>
 
+// The last words recorded at each station, typed out when its screen opens. First line is the speaker.
+export const VOICES: Record<PlanetId, string[]> = {
+  miller: ['DR. MILLER // T+00:04', 'Touchdown. The water is only knee deep. Starting the survey.', 'T+01:07. Those are not mountains.'],
+  mann: ['DR. MANN // DAY 1', 'The surface is here. Cold, but I can work with cold.', 'DAY 2,190. If you are hearing this, you came. Thank you.'],
+  edmunds: ['DR. EDMUNDS // DAY 1', 'The air is good. I am taking the helmet off.', 'DAY 93. Going to sleep now. Come and find me.'],
+}
+
 export type LogEntry = { at: string; source: string; text: string }
 
 export type Progress = { role: string; recovered: PlanetId[]; transmissions: { planet: PlanetId; text: string }[]; complete: boolean }
