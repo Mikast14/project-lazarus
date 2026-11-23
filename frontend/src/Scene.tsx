@@ -497,10 +497,11 @@ function Endurance({ finale, onPlay }: { finale: boolean; onPlay: () => void }) 
   const leave = useRef(0)   // 0 = holding orbit, 1 = arrived at Edmunds
   const edmunds = useMemo(() => new THREE.Vector3().fromArray(PLANETS[2].pos), [])
   useFrame(({ clock }, dt) => {
-    const t = still ? 0 : clock.elapsedTime * 0.04
-    // holding pattern above and left of Gargantua: clear of the mission title, the HUD panels and the
-    // line of sight to every planet
-    ship.current.position.set(-2.4 + Math.sin(t) * 1.3, 4.5 + Math.cos(t * 0.7) * 0.3, 5)
+    // a slow loop above Gargantua: across the top one way nearer the camera, back the other way
+    // further off, about once a minute. It stays clear of the mission title, the HUD panels and the
+    // line of sight to every planet, and never passes behind the black hole.
+    const lap = still ? 0.6 : clock.elapsedTime * 0.1
+    ship.current.position.set(Math.sin(lap) * 4.5, 4.6 + Math.sin(lap * 2) * 0.35, 5 + Math.cos(lap) * 1.5)
     // finale: the ship sets off for Edmunds and shrinks into the distance
     leave.current = !finale ? 0 : still ? 0.5 : Math.min(1, leave.current + dt / 50)
     const k = leave.current * leave.current * (3 - 2 * leave.current)
