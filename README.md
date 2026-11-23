@@ -4,6 +4,8 @@ An interactive, space-themed cybersecurity challenge inspired by the film *Inter
 the navigation computer of the Endurance, in orbit around the black hole Gargantua, and visit three
 silent research stations: Miller, Mann and Edmunds.
 
+**Live site: https://mikast14.github.io/project-lazarus/**
+
 This repository holds the **frontend**. It currently runs on built-in placeholder data; the Flask
 backend with the challenge logic is developed separately and is not published here.
 
