@@ -198,6 +198,7 @@ export const sfx = {
   shot: () => tone(980, 0.05, { type: 'square', volume: 0.01, wet: 0.1 }),
   hit: () => tone(180, 0.14, { type: 'sawtooth', volume: 0.04, wet: 0.3 }),
   hurt: () => boom(0.25),
+  pulse: () => { boom(0.3); tone(220, 0.7, { type: 'sawtooth', volume: 0.035 }); tone(440, 0.9, { volume: 0.03, delay: 0.05, wet: 1 }) },
   pickup: () => { tone(660, 0.12, { volume: 0.05 }); tone(990, 0.2, { volume: 0.05, delay: 0.08 }) },
   deny: () => { tone(140, 0.3, { type: 'sawtooth', volume: 0.05 }); tone(105, 0.45, { type: 'sawtooth', volume: 0.05, delay: 0.12 }) },
   /** A slow swelling major chord that opens up, with rising notes over the top. */
