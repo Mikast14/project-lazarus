@@ -40,7 +40,7 @@ vec3 stars(vec3 d, vec3 dx, vec3 dy, float crowd){
     }
   }
   float band = exp(-pow(d.y*2.5 + d.x*.8 + fbm(d.xz*2.) - .5, 2.)*6.);                // faint galactic band
-  return c + band*vec3(.010, .009, .013)*fbm(d.zx*9. + d.y*4.) + vec3(.003, .004, .011)*fbm(d.xy*3. + d.z);
+  return c + band*vec3(.010, .009, .013)*fbm(d.zx*9. + d.y*4.) + vec3(.0015, .002, .0055);
 }
 float strands(vec2 p){ return pow(1. - abs(2.*fbm(p) - 1.), 3.); }   // ridged noise: thin bright strands, not soft bands
 float diskLayer(vec2 xz, float cr, float ph, float sheet){
@@ -48,7 +48,7 @@ float diskLayer(vec2 xz, float cr, float ph, float sheet){
   float s = sin(a), c = cos(a); vec2 q = mat2(c, -s, s, c)*xz;
   q += sheet*4.3;
   float mid = strands(vec2(cr*9., 3.) + q*.6);
-  if(sheet != 0.) return .3*fbm(q*1.3) + .5*mid + .12;   // outer sheets only add depth, so they get the cheap version
+  if(sheet != 0.) return .62*mid + .2;                   // outer sheets only add depth, so they get the cheap version
   return .2*fbm(q*1.3) + .32*mid + .3*strands(vec2(cr*28., 7.) + q*1.6)
        + .16*strands(vec2(cr*70., 2.) + q*3.)          // hair-fine strands, visible when the camera passes close
        + .5*pow(noise(q*.7 + 9.), 6.);                 // a few hot clumps riding the flow
@@ -91,7 +91,7 @@ void main(){
     nearest = min(nearest, r);
     if(r < 1.){ captured = true; break; }
     if(r > 30. && dot(p, d) > 0.) break;
-    float dt = clamp(.12*(r - .8), .02, 1.5);           // small steps near the hole resolve the photon ring
+    float dt = clamp(.16*(r - .75), .03, 1.8);          // shorter steps near the hole, where the light bends most
     d += -1.5*h2*p/pow(r, 5.) * dt;
     vec3 np = p + d*dt;
     // hot haze above and below the disk, so it has thickness
@@ -290,7 +290,7 @@ function Gargantua() {
   return (
     <mesh frustumCulled={false} renderOrder={-1}>
       <planeGeometry args={[2, 2]} />
-      <shaderMaterial uniforms={uniforms} defines={{ STEPS: 140 }} depthTest={false} depthWrite={false}
+      <shaderMaterial uniforms={uniforms} defines={{ STEPS: 96 }} depthTest={false} depthWrite={false}
         vertexShader="varying vec2 vUv; varying vec3 vCentre; void main(){ vUv = uv; vec4 c = projectionMatrix*viewMatrix*vec4(0., 0., 0., 1.); vCentre = vec3(c.xy/c.w, step(0., c.w)); gl_Position = vec4(position.xy, 1., 1.); }"
         fragmentShader={HOLE_FRAG} />
     </mesh>
@@ -703,7 +703,7 @@ function AdaptiveDpr() {
     const frame = a.t / a.n
     a.t = a.n = 0
     a.sinceRaise++
-    if (frame > 1 / 35) { a.slow++; a.fast = 0 } else if (frame < 1 / 50) { a.fast++; a.slow = 0 } else a.slow = a.fast = 0
+    if (frame > 1 / 52) { a.slow++; a.fast = 0 } else if (frame < 1 / 57) { a.fast++; a.slow = 0 } else a.slow = a.fast = 0
     if (a.slow >= 2 && a.dpr > 0.4) {
       // slow right after stepping up means that step was too much: go back and stop trying it
       if (a.sinceRaise < 5) a.cap = a.dpr = a.before

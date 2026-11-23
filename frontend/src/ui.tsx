@@ -8,7 +8,7 @@ const CORNERS = ['-top-px -left-px border-t border-l', '-top-px -right-px border
 
 export function Panel({ title, tag, className = '', children }: { title: string; tag?: string; className?: string; children: ReactNode }) {
   return (
-    <section className={`relative border border-white/10 bg-black/50 backdrop-blur-sm ${className}`}>
+    <section className={`relative border border-white/10 bg-black/65 ${className}`}>
       {CORNERS.map(c => <span key={c} aria-hidden className={`absolute h-2 w-2 border-(--accent) ${c}`} />)}
       <header className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-[10px] tracking-[.25em]">
         <h2 className="text-(--accent)">{title}</h2>
@@ -90,7 +90,7 @@ export function Station({ id, readouts, children }: { id: PlanetId; readouts: [l
   const p = PLANETS[index]
   const transmission = PROGRESS.transmissions.find(t => t.planet === id)
   const [site, setSite] = useState(false)   // false = station data, true = the landing-site camera
-  const tab = (on: boolean) => `cursor-pointer border px-3 py-2 text-[10px] tracking-[.3em] backdrop-blur-sm ${on ? 'border-(--accent) bg-(--accent)/15 text-(--accent)' : 'border-white/20 bg-black/40 hover:border-(--accent) hover:text-(--accent)'}`
+  const tab = (on: boolean) => `cursor-pointer border px-3 py-2 text-[10px] tracking-[.3em] ${on ? 'border-(--accent) bg-(--accent)/15 text-(--accent)' : 'border-white/20 bg-black/40 hover:border-(--accent) hover:text-(--accent)'}`
   return (
     <main style={{ '--accent': p.color } as CSSProperties} className={`station absolute inset-0 overflow-y-auto ${id === 'mann' ? 'damaged' : ''}`}>
       {/* darkened edges, so the planet reads as a backdrop */}
@@ -107,7 +107,7 @@ export function Station({ id, readouts, children }: { id: PlanetId; readouts: [l
             <button onClick={() => setSite(false)} aria-pressed={!site} className={tab(!site)}>STATION DATA</button>
             <button onClick={() => setSite(true)} aria-pressed={site} className={tab(site)}>LANDING SITE</button>
             <button onClick={() => { location.hash = '' }}
-              className="cursor-pointer border border-white/20 bg-black/40 px-4 py-2 text-[10px] tracking-[.3em] backdrop-blur-sm hover:border-(--accent) hover:text-(--accent)">
+              className="cursor-pointer border border-white/20 bg-black/40 px-4 py-2 text-[10px] tracking-[.3em] hover:border-(--accent) hover:text-(--accent)">
               ← RETURN TO GARGANTUA
             </button>
           </div>

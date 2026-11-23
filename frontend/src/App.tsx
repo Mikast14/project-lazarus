@@ -152,7 +152,7 @@ export default function App() {
       })}
 
       <button onClick={() => { setSound(!sound); setSoundOn(!sound) }} aria-pressed={sound}
-        className={`ui absolute bottom-3 left-1/2 z-20 -translate-x-1/2 cursor-pointer border bg-black/50 px-3 py-1 text-[9px] tracking-[.3em] backdrop-blur-sm ${sound ? 'border-amber-200/50 text-amber-200' : 'border-white/20 text-white/50 hover:text-white/80'}`}>
+        className={`ui absolute bottom-3 left-1/2 z-20 -translate-x-1/2 cursor-pointer border bg-black/50 px-3 py-1 text-[9px] tracking-[.3em] ${sound ? 'border-amber-200/50 text-amber-200' : 'border-white/20 text-white/50 hover:text-white/80'}`}>
         SOUND {sound ? 'ON' : 'OFF'}
       </button>
 
@@ -229,7 +229,7 @@ export default function App() {
                 </p>
               </div>
 
-              <div className="pointer-events-auto w-80 border border-white/10 bg-black/40 p-3 backdrop-blur-sm">
+              <div className="pointer-events-auto w-80 border border-white/10 bg-black/40 p-3">
                 <p className="flex justify-between text-[10px] tracking-[.3em] text-white/50">
                   <span>TRANSMISSIONS</span><span className="text-amber-200">{PROGRESS.recovered.length} / {PLANETS.length}</span>
                 </p>
